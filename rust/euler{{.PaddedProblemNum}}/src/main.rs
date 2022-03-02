@@ -1,3 +1,5 @@
+use log::debug;
+use std::{cmp::max, env, time::Instant};
 /**
 Project Euler - Problem {{.ProblemNum}}
 https://projecteuler.net/problem={{.ProblemNum}}
@@ -12,32 +14,37 @@ Solution
 
 */
 
-use std::env;
-use std::time::Instant;
-
+const BENCHMARK_ITERATIONS: u32 = 1;
 
 /// Solve problem {{.ProblemNum}}
-pub fn solve(_verbose: bool) -> usize {
+pub fn solve() -> usize {
     0
 }
 
 fn main() {
     println!("Solving problem {{.ProblemNum}}");
 
-    let args: Vec<String> = env::args().collect();
-    let verbose = args.contains(&String::from("-v")) || args.contains(&String::from("--verbose"));
+    // check `env::args()` for a verbose flag
+    let log_level = match env::args().find(|s| s == "-v" || s == "--verbose") {
+        Some(_) => log::LevelFilter::Debug,
+        None => log::LevelFilter::Error,
+    };
 
-    if verbose {
-        println!("Verbose logging enabled");
-    } else {
-        println!("Use -v or --verbose to enable verbose logging");
-    }
+    // Initialize a logger with default level set according to the verbose flag
+    env_logger::builder().filter_level(log_level).init();
 
+    // This will only display in verbose mode
+    debug!("Verbose output enabled");
+
+    // Run `solve` `BENCHMARK_ITERATIONS` times, and compute the duration per iteration
     let start = Instant::now();
-    let solution = solve(verbose);
-    let duration = start.elapsed();
+    let mut solution = 0;
+    for _ in 0..BENCHMARK_ITERATIONS {
+        solution = solve();
+    }
+    let duration = start.elapsed() / max(BENCHMARK_ITERATIONS, 1);
 
-    println!("Computed answer {} in {:?}", solution, duration);
+    println!("Computed answer {solution} in {duration:?}");
 }
 
 #[cfg(test)]
@@ -46,6 +53,6 @@ mod test {
 
     #[test]
     fn solve_test() {
-        assert_eq!(solve(false), 0);
+        assert_eq!(solve(), 0);
     }
 }
